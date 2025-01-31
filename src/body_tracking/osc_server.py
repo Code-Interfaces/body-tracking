@@ -98,8 +98,6 @@ class OSCSender:
                 osc_address = f"/hand/{hand_idx}/point/{idx}"
                 position = (landmark.x, landmark.y, landmark.z)
 
-                console.log(f"🤲 Sending: [cyan]{
-                            osc_address}[/cyan] -> {position}")
                 self.client.send_message(osc_address, position)
 
     def send_specific_landmarks(self, landmarks, points_of_interest):
