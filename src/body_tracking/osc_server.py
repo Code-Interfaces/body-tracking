@@ -86,6 +86,22 @@ class OSCSender:
                 self.client.send_message(osc_address_name, position)
                 self.client.send_message(osc_address_index, position)
 
+    def send_hand_landmarks(self, hands_landmarks):
+        """Send hand landmarks via OSC."""
+        if not hands_landmarks:
+            console.log(
+                "[bold yellow]⚠️ No hand landmarks detected[/bold yellow]")
+            return
+
+        for hand_idx, hand_landmarks in enumerate(hands_landmarks):
+            for idx, landmark in enumerate(hand_landmarks.landmark):
+                osc_address = f"/hand/{hand_idx}/point/{idx}"
+                position = (landmark.x, landmark.y, landmark.z)
+
+                console.log(f"🤲 Sending: [cyan]{
+                            osc_address}[/cyan] -> {position}")
+                self.client.send_message(osc_address, position)
+
     def send_specific_landmarks(self, landmarks, points_of_interest):
         """
         Send only specific landmarks via OSC.

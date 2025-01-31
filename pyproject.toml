@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "body-tracking"
-version = "0.1.0"
+version = "0.1.1"
 description = "A CLI tool for working with mediaPipe body tracking data"
 authors = [{ name = "Alvin Ashiatey", email = "mail@alvinashiatey.com" }]
 dependencies = ["mediapipe", "python-osc", "click", "opencv-python", "rich"]
