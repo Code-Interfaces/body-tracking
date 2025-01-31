@@ -2,7 +2,10 @@ from pythonosc.udp_client import SimpleUDPClient
 from enum import Enum
 from .config import config
 from rich.console import Console
-from rich.table import Table
+import logging
+
+# Suppress Python-OSC logs
+logging.getLogger("pythonosc").setLevel(logging.ERROR)
 
 # Initialize Rich Console
 console = Console()
@@ -79,10 +82,6 @@ class OSCSender:
                 osc_address_index = f"/pose/{idx}"
                 position = (point.x, point.y, point.z)
 
-                # Log sending message
-                console.log(f"📡 Sending: [cyan]{
-                            osc_address_name}[/cyan] -> {position}")
-
                 # Send OSC messages
                 self.client.send_message(osc_address_name, position)
                 self.client.send_message(osc_address_index, position)
@@ -106,8 +105,6 @@ class OSCSender:
                 osc_address = f"/pose/{point.name.lower()}"
                 position = (landmark.x, landmark.y, landmark.z)
 
-                console.log(f"📡 Sending: [cyan]{
-                            osc_address}[/cyan] -> {position}")
                 self.client.send_message(osc_address, position)
 
     def close(self):

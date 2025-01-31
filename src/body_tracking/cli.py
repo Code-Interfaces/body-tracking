@@ -1,3 +1,4 @@
+import logging
 from .osc_server import OSCSender
 from .tracking import BodyTracker
 from .config import config
@@ -7,8 +8,10 @@ import cv2
 import click
 import os
 
-# Suppress TensorFlow Lite verbose logs
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+# Suppress TensorFlow Lite and absl logs
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"  # Set to "3" to show only errors
+logging.getLogger("tensorflow").setLevel(logging.ERROR)
+logging.getLogger("absl").setLevel(logging.ERROR)
 
 # Initialize Rich Console
 console = Console()
@@ -47,7 +50,6 @@ def main(host, port, debug):
 
             if landmarks and landmarks.pose_landmarks:
                 osc.send_landmarks(landmarks.pose_landmarks.landmark)
-                console.log("[green]✅ Landmarks sent[/green]")
 
                 # Draw landmarks only if debug mode is enabled
                 if debug:

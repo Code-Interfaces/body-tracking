@@ -1,9 +1,11 @@
+import logging
 import os
-import cv2
 import mediapipe as mp
 
 # Suppress TensorFlow Lite warnings
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+logging.getLogger("mediapipe").setLevel(logging.ERROR)
+logging.getLogger("cv2").setLevel(logging.ERROR)
 
 
 class BodyTracker:
