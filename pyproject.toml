@@ -1,0 +1,20 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "body-tracking"
+version = "0.1.0"
+description = "A CLI tool for working with mediaPipe body tracking data"
+authors = [{ name = "Alvin Ashiatey", email = "mail@alvinashiatey.com" }]
+dependencies = ["mediapipe", "python-osc", "click", "opencv-python"]
+requires-python = ">=3.12"
+
+[project.scripts]
+body-tracking = "body_tracking.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/body_tracking"]
+
+[tool.hatch.build]
+include = ["src/body_tracking/**/*.py"]
