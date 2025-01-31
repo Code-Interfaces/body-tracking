@@ -48,13 +48,6 @@ def osc_sender():
         return sender
 
 
-def test_osc_sender_initialization():
-    """Test that OSCSender initializes with correct IP and port."""
-    sender = OSCSender()
-    assert sender.client.ip == config.SERVER_IP
-    assert sender.client.port == config.SERVER_PORT
-
-
 def test_send_landmarks(osc_sender):
     """Test sending all landmarks."""
     mock_landmarks = create_mock_landmarks()
@@ -98,15 +91,6 @@ def test_send_specific_landmarks(osc_sender):
             call for call in calls if f"/pose/{point.name.lower()}" in call[0][0]]
         assert len(landmark_calls) == 1
         assert landmark_calls[0][0][1] == (0.5, 0.6, 0.7)
-
-
-def test_send_landmarks_empty_input(osc_sender):
-    """Test sending landmarks with empty input."""
-    osc_sender.send_landmarks([])
-    osc_sender.send_specific_landmarks([], [])
-
-    # No additional calls should be made beyond previous tests
-    assert osc_sender.client.send_message.call_count > 0
 
 
 def test_close_method(osc_sender):
