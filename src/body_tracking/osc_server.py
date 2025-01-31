@@ -1,6 +1,11 @@
 from pythonosc.udp_client import SimpleUDPClient
 from enum import Enum
 from .config import config
+from rich.console import Console
+from rich.table import Table
+
+# Initialize Rich Console
+console = Console()
 
 
 class PoseLandmark(Enum):
@@ -52,7 +57,8 @@ class OSCSender:
     def __init__(self, ip=config.SERVER_IP, port=config.SERVER_PORT):
         """Initialize the OSC client with given IP and port."""
         self.client = SimpleUDPClient(ip, port)
-        print(f"OSC client initialized with {ip}:{port}")
+        console.log(f"[bold green]✅ OSC client initialized with {
+                    ip}:{port}[/bold green]")
 
     def send_landmarks(self, landmarks):
         """
@@ -62,21 +68,24 @@ class OSCSender:
             landmarks: List of MediaPipe pose landmarks
         """
         if not landmarks:
+            console.log("[bold yellow]⚠️ No landmarks detected[/bold yellow]")
             return
 
         for landmark in PoseLandmark:
             idx = landmark.value
             if idx < len(landmarks):
                 point = landmarks[idx]
-                # Send with both index and name for maximum compatibility
-                self.client.send_message(
-                    f"/pose/{landmark.name.lower()}",
-                    (point.x, point.y, point.z)
-                )
-                self.client.send_message(
-                    f"/pose/{idx}",
-                    (point.x, point.y, point.z)
-                )
+                osc_address_name = f"/pose/{landmark.name.lower()}"
+                osc_address_index = f"/pose/{idx}"
+                position = (point.x, point.y, point.z)
+
+                # Log sending message
+                console.log(f"📡 Sending: [cyan]{
+                            osc_address_name}[/cyan] -> {position}")
+
+                # Send OSC messages
+                self.client.send_message(osc_address_name, position)
+                self.client.send_message(osc_address_index, position)
 
     def send_specific_landmarks(self, landmarks, points_of_interest):
         """
@@ -87,17 +96,20 @@ class OSCSender:
             points_of_interest: List of PoseLandmark enums to track
         """
         if not landmarks:
+            console.log("[bold yellow]⚠️ No landmarks detected[/bold yellow]")
             return
 
         for point in points_of_interest:
             idx = point.value
             if idx < len(landmarks):
                 landmark = landmarks[idx]
-                self.client.send_message(
-                    f"/pose/{point.name.lower()}",
-                    (landmark.x, landmark.y, landmark.z)
-                )
+                osc_address = f"/pose/{point.name.lower()}"
+                position = (landmark.x, landmark.y, landmark.z)
+
+                console.log(f"📡 Sending: [cyan]{
+                            osc_address}[/cyan] -> {position}")
+                self.client.send_message(osc_address, position)
 
     def close(self):
         """Close the OSC sender (if necessary)."""
-        pass
+        console.log("[bold red]🛑 OSC sender closed.[/bold red]")

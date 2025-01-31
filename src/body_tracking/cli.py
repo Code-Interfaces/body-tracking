@@ -1,12 +1,17 @@
 from .osc_server import OSCSender
 from .tracking import BodyTracker
 from .config import config
+from rich.console import Console
+from rich.progress import Progress
 import cv2
 import click
 import os
 
 # Suppress TensorFlow Lite verbose logs
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+
+# Initialize Rich Console
+console = Console()
 
 
 @click.command()
@@ -17,42 +22,52 @@ def main(host, port, debug):
     """Run the body tracking CLI and send OSC data."""
     tracker = BodyTracker()
     osc = OSCSender(host, port)
-
     cap = cv2.VideoCapture(0)  # Open webcam
 
-    click.echo("Tracking started. Press 'q' to quit.")
+    console.print(
+        f"[bold green]🚀 Tracking started[/bold green] (Press 'q' to quit)")
+    console.print(f"📡 Sending OSC data to [bold blue]{
+                  host}:{port}[/bold blue]")
 
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            print("Ignoring empty camera frame.")
-            continue
+    with Progress() as progress:
+        tracking_task = progress.add_task("[cyan]Tracking...", total=None)
 
-        frame = cv2.cvtColor(cv2.flip(frame, 1), cv2.COLOR_BGR2RGB)
-        frame.flags.writeable = False
-        landmarks = tracker.track(frame)
-        frame.flags.writeable = True
-        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                console.log(
+                    "[bold yellow]⚠️ Ignoring empty camera frame[/bold yellow]")
+                continue
 
-        if landmarks and landmarks.pose_landmarks:
-            osc.send_landmarks(landmarks.pose_landmarks.landmark)
+            frame = cv2.cvtColor(cv2.flip(frame, 1), cv2.COLOR_BGR2RGB)
+            frame.flags.writeable = False
+            landmarks = tracker.track(frame)
+            frame.flags.writeable = True
+            frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
-            # Draw landmarks only if debug mode is enabled
+            if landmarks and landmarks.pose_landmarks:
+                osc.send_landmarks(landmarks.pose_landmarks.landmark)
+                console.log("[green]✅ Landmarks sent[/green]")
+
+                # Draw landmarks only if debug mode is enabled
+                if debug:
+                    tracker.mp_drawing.draw_landmarks(
+                        frame, landmarks.pose_landmarks, tracker.mp_pose.POSE_CONNECTIONS)
+
+            # Show the tracking window only in debug mode
             if debug:
-                tracker.mp_drawing.draw_landmarks(
-                    frame, landmarks.pose_landmarks, tracker.mp_pose.POSE_CONNECTIONS)
+                cv2.imshow("Tracking", frame)
 
-        # Show the tracking window only in debug mode
-        if debug:
-            cv2.imshow("Tracking", frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+        progress.remove_task(tracking_task)
 
     cap.release()
     cv2.destroyAllWindows()
     tracker.close()
-    click.echo("Tracking stopped.")
+
+    console.print("[bold red]🛑 Tracking stopped.[/bold red]")
 
 
 if __name__ == "__main__":

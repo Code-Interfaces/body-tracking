@@ -7,7 +7,7 @@ name = "body-tracking"
 version = "0.1.0"
 description = "A CLI tool for working with mediaPipe body tracking data"
 authors = [{ name = "Alvin Ashiatey", email = "mail@alvinashiatey.com" }]
-dependencies = ["mediapipe", "python-osc", "click", "opencv-python"]
+dependencies = ["mediapipe", "python-osc", "click", "opencv-python", "rich"]
 requires-python = ">=3.12"
 
 [project.scripts]
