@@ -12,6 +12,8 @@ console = Console()
 
 
 class PoseLandmark(Enum):
+    """Pose landmarks based on MediaPipe definitions."""
+
     # Face
     NOSE = 0
     LEFT_EYE_INNER = 1
@@ -33,14 +35,6 @@ class PoseLandmark(Enum):
     LEFT_WRIST = 15
     RIGHT_WRIST = 16
 
-    # Hands
-    LEFT_PINKY = 17
-    RIGHT_PINKY = 18
-    LEFT_INDEX = 19
-    RIGHT_INDEX = 20
-    LEFT_THUMB = 21
-    RIGHT_THUMB = 22
-
     # Lower Body
     LEFT_HIP = 23
     RIGHT_HIP = 24
@@ -48,12 +42,36 @@ class PoseLandmark(Enum):
     RIGHT_KNEE = 26
     LEFT_ANKLE = 27
     RIGHT_ANKLE = 28
-
-    # Feet
     LEFT_HEEL = 29
     RIGHT_HEEL = 30
     LEFT_FOOT_INDEX = 31
     RIGHT_FOOT_INDEX = 32
+
+
+class HandLandmark(Enum):
+    """Hand landmarks based on MediaPipe definitions."""
+
+    WRIST = 0
+    THUMB_CMC = 1
+    THUMB_MCP = 2
+    THUMB_IP = 3
+    THUMB_TIP = 4
+    INDEX_FINGER_MCP = 5
+    INDEX_FINGER_PIP = 6
+    INDEX_FINGER_DIP = 7
+    INDEX_FINGER_TIP = 8
+    MIDDLE_FINGER_MCP = 9
+    MIDDLE_FINGER_PIP = 10
+    MIDDLE_FINGER_DIP = 11
+    MIDDLE_FINGER_TIP = 12
+    RING_FINGER_MCP = 13
+    RING_FINGER_PIP = 14
+    RING_FINGER_DIP = 15
+    RING_FINGER_TIP = 16
+    PINKY_MCP = 17
+    PINKY_PIP = 18
+    PINKY_DIP = 19
+    PINKY_TIP = 20
 
 
 class OSCSender:
@@ -65,61 +83,47 @@ class OSCSender:
 
     def send_landmarks(self, landmarks):
         """
-        Send pose landmarks via OSC using descriptive names.
+        Send body pose landmarks via OSC.
 
         Args:
             landmarks: List of MediaPipe pose landmarks
         """
         if not landmarks:
-            console.log("[bold yellow]⚠️ No landmarks detected[/bold yellow]")
+            console.log(
+                "[bold yellow]⚠️ No body landmarks detected[/bold yellow]")
             return
 
         for landmark in PoseLandmark:
             idx = landmark.value
             if idx < len(landmarks):
                 point = landmarks[idx]
-                osc_address_name = f"/pose/{landmark.name.lower()}"
-                osc_address_index = f"/pose/{idx}"
+                osc_address = f"/pose/{landmark.name.lower()}"
                 position = (point.x, point.y, point.z)
 
-                # Send OSC messages
-                self.client.send_message(osc_address_name, position)
-                self.client.send_message(osc_address_index, position)
+                console.log(f"📡 Sending: [cyan]{
+                            osc_address}[/cyan] -> {position}")
+                self.client.send_message(osc_address, position)
 
     def send_hand_landmarks(self, hands_landmarks):
-        """Send hand landmarks via OSC."""
+        """
+        Send hand landmarks via OSC.
+
+        Args:
+            hands_landmarks: List of hand landmarks detected by MediaPipe
+        """
         if not hands_landmarks:
             console.log(
                 "[bold yellow]⚠️ No hand landmarks detected[/bold yellow]")
             return
 
         for hand_idx, hand_landmarks in enumerate(hands_landmarks):
-            for idx, landmark in enumerate(hand_landmarks.landmark):
-                osc_address = f"/hand/{hand_idx}/point/{idx}"
-                position = (landmark.x, landmark.y, landmark.z)
-
-                self.client.send_message(osc_address, position)
-
-    def send_specific_landmarks(self, landmarks, points_of_interest):
-        """
-        Send only specific landmarks via OSC.
-
-        Args:
-            landmarks: List of MediaPipe pose landmarks
-            points_of_interest: List of PoseLandmark enums to track
-        """
-        if not landmarks:
-            console.log("[bold yellow]⚠️ No landmarks detected[/bold yellow]")
-            return
-
-        for point in points_of_interest:
-            idx = point.value
-            if idx < len(landmarks):
-                landmark = landmarks[idx]
-                osc_address = f"/pose/{point.name.lower()}"
-                position = (landmark.x, landmark.y, landmark.z)
-
-                self.client.send_message(osc_address, position)
+            for landmark in HandLandmark:
+                idx = landmark.value
+                if idx < len(hand_landmarks.landmark):
+                    point = hand_landmarks.landmark[idx]
+                    osc_address = f"/hand/{hand_idx}/{landmark.name.lower()}"
+                    position = (point.x, point.y, point.z)
+                    self.client.send_message(osc_address, position)
 
     def close(self):
         """Close the OSC sender (if necessary)."""
